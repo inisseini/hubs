@@ -74,7 +74,6 @@ export function HomePage() {
           )}
           <div className={styles.logoContainer}>
             <AppLogo />
-            <AppLogo />
           </div>
           <div className={styles.appInfo}>
             <div className={styles.appDescription}>{configs.translation("app-description")}</div>
