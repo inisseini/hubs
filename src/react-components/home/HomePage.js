@@ -73,7 +73,8 @@ export function HomePage() {
             <SignInButton mobile />
           )}
           <div className={styles.logoContainer}>
-            <AppLogo /><p>test</p>
+            <AppLogo />
+            <AppLogo />
           </div>
           <div className={styles.appInfo}>
             <div className={styles.appDescription}>{configs.translation("app-description")}</div>
