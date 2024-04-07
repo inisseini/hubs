@@ -9,7 +9,7 @@ on:
         type: string
       dockerfile:
         type: string
-        default: RetPageOriginDockerfile
+        default: TurkeyDockerfile
       registry:
         type: string
 
