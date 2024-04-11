@@ -11,8 +11,6 @@ import { LegalMessage } from "./LegalMessage";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
-import configs from "../../utils/configs";
-
 export const SignInStep = {
   submit: "submit",
   waitForVerification: "waitForVerification",
@@ -93,8 +91,8 @@ export function SubmitEmail({ onSubmitEmail, initialEmail, privacyUrl, termsUrl,
   const DBClient = new DynamoDBClient({
     region: "ap-northeast-1",
     credentials: {
-      accessKeyId: configs.ACCESSKEYID,
-      secretAccessKey: configs.SECRETACCESSKEY
+      accessKeyId: process.env.ACCESSKEYID,
+      secretAccessKey: process.env.SECRETACCESSKEY
     }
   });
 

@@ -17,9 +17,7 @@ let isAdmin = false;
   "GA_TRACKING_ID",
   "SHORTLINK_DOMAIN",
   "BASE_ASSETS_PATH",
-  "UPLOADS_HOST",
-  "ACCESSKEYID",
-  "SECRETACCESSKEY"
+  "UPLOADS_HOST"
 ].forEach(x => {
   const el = document.querySelector(`meta[name='env:${x.toLowerCase()}']`);
   configs[x] = el ? el.getAttribute("content") : process.env[x];
