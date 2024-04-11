@@ -1,0 +1,60 @@
+@use "../styles/theme.scss";
+
+:local(.library-input-container) {
+  padding: 8px 16px;
+  background-color: theme.$input-bg-color;
+  flex-basis: max-content;
+}
+
+:local(.library-input-icon) {
+  cursor: pointer;
+  width: 24px;
+
+  &:disabled,
+  &[disabled] {
+    cursor: default;
+  }
+
+  svg {
+    color: theme.$input-icon-color;
+  }
+}
+
+:local(.library-input-warning) {
+  padding-top: theme.$spacing-2xs;
+}
+
+:local(.warning-border) {
+  border: 2px solid theme.$red !important;
+}
+
+:local(.warning-text-color) {
+  color: theme.$red;
+}
+
+:local(.library-input-text-area-styles) {
+  max-height: 50vh;
+  height: 40px !important;
+  p {
+    overflow-y: "auto";
+    height: "calc(100% - 60px)";
+    padding: "8px 16px";
+    display: "flex";
+    flex-direction: "column";
+    gap: "10px 0";
+  }
+}
+
+:local(.emojiPopover) {
+  border: none;
+}
+
+:local(.hiddenScrollBar) {
+  /*IE(Internet Explorer)・Microsoft Edgeへの対応*/
+  -ms-overflow-style: none;
+  /*Firefoxへの対応*/
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

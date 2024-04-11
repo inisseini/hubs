@@ -45,6 +45,9 @@ import { ReactComponent as VRIcon } from "./VR.svg";
 import { ReactComponent as WandIcon } from "./Wand.svg";
 import { ReactComponent as HmcLogo } from "./HmcLogo.svg";
 
+import { ReactComponent as QuestionIcon } from "./question.svg";
+import { ReactComponent as LibraryIcon } from "./library.svg";
+
 export default {
   title: "Icon",
   argTypes: {
@@ -99,6 +102,9 @@ export const AllIcons = args => (
     <VolumeOffIcon {...args} />
     <VRIcon {...args} />
     <WandIcon {...args} />
+
+    <LibraryIcon {...args} />
+    <QuestionIcon {...args} />
   </>
 );
 

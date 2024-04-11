@@ -8,7 +8,9 @@ const configs = {};
   "ITA_SERVER",
   "POSTGREST_SERVER",
   "RETICULUM_SERVER",
-  "TIER"
+  "TIER",
+  "ACCESSKEYID",
+  "SECRETACCESSKEY"
 ].forEach(x => {
   const el = document.querySelector(`meta[name='env:${x.toLowerCase()}']`);
   configs[x] = el ? el.getAttribute("content") : process.env[x];

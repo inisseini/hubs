@@ -15,6 +15,7 @@ export const AllPermissions = () => (
       <UserProfileSidebar
         displayName="Robert"
         pronouns="he/him"
+        profile="hello"
         volume={4}
         isSignedIn
         canHide
@@ -32,6 +33,7 @@ export const CanDemote = () => (
       <UserProfileSidebar
         displayName="Robert"
         pronouns="he/him"
+        profile="hello"
         volume={4}
         isSignedIn
         canHide
@@ -45,7 +47,17 @@ export const CanDemote = () => (
 
 export const CanUnhide = () => (
   <RoomLayout
-    sidebar={<UserProfileSidebar displayName="Robert" pronouns="he/him" volume={4} isSignedIn canHide isHidden />}
+    sidebar={
+      <UserProfileSidebar
+        displayName="Robert"
+        pronouns="he/him"
+        profile="hello"
+        volume={4}
+        isSignedIn
+        canHide
+        isHidden
+      />
+    }
   />
 );
 
@@ -55,6 +67,7 @@ export const NotSignedIn = () => (
       <UserProfileSidebar
         displayName="Robert"
         pronouns="he/him"
+        profile="hello"
         volume={4}
         isSignedIn
         canHide
@@ -68,16 +81,29 @@ export const NotSignedIn = () => (
 
 export const NotSignedInCanDemote = () => (
   <RoomLayout
-    sidebar={<UserProfileSidebar displayName="Robert" pronouns="he/him" volume={4} canHide canKick canMute canDemote />}
+    sidebar={
+      <UserProfileSidebar
+        displayName="Robert"
+        pronouns="he/him"
+        profile="hello"
+        volume={4}
+        canHide
+        canKick
+        canMute
+        canDemote
+      />
+    }
   />
 );
 
 export const NotSignedInCanUnhide = () => (
-  <RoomLayout sidebar={<UserProfileSidebar displayName="Robert" pronouns="he/him" volume={4} canHide isHidden />} />
+  <RoomLayout
+    sidebar={<UserProfileSidebar displayName="Robert" pronouns="he/him" profile="hello" volume={4} canHide isHidden />}
+  />
 );
 
 export const NoPermissions = () => (
-  <RoomLayout sidebar={<UserProfileSidebar displayName="Robert" pronouns="he/him" volume={4} />} />
+  <RoomLayout sidebar={<UserProfileSidebar displayName="Robert" pronouns="he/him" profile="hello" volume={4} />} />
 );
 
 export const NetworkMuted = () => (
@@ -86,6 +112,7 @@ export const NetworkMuted = () => (
       <UserProfileSidebar
         displayName="Robert"
         pronouns="he/him"
+        profile="hello"
         volume={4}
         isMuted
         isSignedIn
@@ -103,6 +130,7 @@ export const LocalMuted = () => (
       <UserProfileSidebar
         displayName="Robert"
         pronouns="he/him"
+        profile="hello"
         volume={0}
         isSignedIn
         canHide
@@ -120,6 +148,7 @@ export const ShowBackButton = () => (
       <UserProfileSidebar
         displayName="Robert"
         pronouns="he/him"
+        profile="hello"
         volume={4}
         showBackButton
         isSignedIn

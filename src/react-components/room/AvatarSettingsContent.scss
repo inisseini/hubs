@@ -7,6 +7,42 @@
   text-align: center;
 }
 
+:local(.icon) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 120px;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  border: 2px solid #5d5d5d;
+  background-color: aliceblue;
+  overflow: hidden;
+  img {
+    width: 100%;
+  }
+}
+
+
+
+:local(.iconButton) {
+  background-color: #7ed320;
+  color: #ffffff;
+  height: 48px;
+  min-height: 48px;
+  width: min-content;
+  min-width: 156px;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 8px;
+  border-width: 0;
+  border-color: transparent;
+  transition: background-color 0.1s ease-in-out;
+  white-space: nowrap;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 :local(.avatar-preview-container) {
   display: flex;

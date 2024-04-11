@@ -1,4 +1,4 @@
-import React, { Component, useEffect } from "react";
+import React, { Component, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import classNames from "classnames";
 import copy from "copy-to-clipboard";
@@ -102,7 +102,17 @@ import { NotificationsContainer } from "./room/NotificationsContainer";
 import { usePermissions } from "./room/hooks/usePermissions";
 import { ChatContextProvider } from "./room/contexts/ChatContext";
 import ChatToolbarButton from "./room/components/ChatToolbarButton/ChatToolbarButton";
+import LibraryToolbarButton from "./room/components/LibraryToolbarButton";
 import SeePlansCTA from "./room/components/SeePlansCTA/SeePlansCTA";
+
+import { LibrarySidebarContainer } from "./room/LibrarySidebarContainer";
+import { LibraryTestSidebarContainer } from "./room/LibraryTestSidebarContainer";
+
+import { createAndRedirectToNewHub } from "../utils/phoenix-utils";
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import configs from "../utils/configs";
 
 const avatarEditorDebug = qsTruthy("avatarEditorDebug");
 
@@ -209,7 +219,10 @@ class UIRoot extends Component {
     sidebarId: null,
     presenceCount: 0,
     chatPrefix: "",
-    chatAutofocus: false
+    chatAutofocus: false,
+
+    password: null,
+    firstConfirm: true
   };
 
   constructor(props) {
@@ -349,6 +362,12 @@ class UIRoot extends Component {
         document.querySelector(".rs-base").style.visibility = "hidden";
       }
     });
+
+    this.props.scene.addEventListener("action_toggle_library", () => {
+      console.log("test toggle library");
+      this.toggleSidebar("library", { chatPrefix: "", chatAutofocus: false });
+    });
+
     this.props.scene.addEventListener("devicechange", () => {
       this.forceUpdate();
     });
@@ -773,9 +792,9 @@ class UIRoot extends Component {
 
   pushHistoryState = (k, v) => pushHistoryState(this.props.history, k, v);
 
-  setSidebar(sidebarId, otherState) {
+  setSidebar = (sidebarId, otherState) => {
     this.setState({ sidebarId, chatPrefix: "", chatAutofocus: false, selectedUserId: null, ...(otherState || {}) });
-  }
+  };
 
   toggleSidebar(sidebarId, otherState) {
     this.setState(({ sidebarId: curSidebarId }) => {
@@ -827,9 +846,82 @@ class UIRoot extends Component {
   };
 
   renderEntryStartPanel = () => {
-    const { hasAcceptedProfile, hasChangedNameOrPronouns } = this.props.store.state.activity;
+    const DBClient = new DynamoDBClient({
+      region: "ap-northeast-1",
+      credentials: {
+        accessKeyId: configs.ACCESSKEYID,
+        secretAccessKey: configs.SECRETACCESSKEY
+      }
+    });
+
+    const docClient = DynamoDBDocumentClient.from(DBClient);
+
+    const GetGeneral = async () => {
+      const command = new GetCommand({
+        TableName: "generalParameter",
+        Key: {
+          key: "settings"
+        }
+      });
+
+      const response = await docClient.send(command);
+
+      const hour = new Date().getHours();
+
+      console.log(hour, response.Item.openingTime, response.Item.closingTime);
+      if (Number(response.Item.openingTime) <= hour && hour <= Number(response.Item.closingTime)) {
+        console.log("ようこそMetaCampUsへ");
+      } else {
+        const message =
+          "運用時間外です。またお越しください。運用時間は" +
+          String(response.Item.openingTime) +
+          "時から" +
+          String(response.Item.closingTime) +
+          "時です。";
+        alert(message);
+        location.href = "/";
+        //return <p style={{ zIndex: "100000000" }}>運用時間外です。</p>;
+      }
+    };
+
+    const GetRoom = async () => {
+      const command = new GetCommand({
+        TableName: "roomParameter",
+        Key: {
+          URL: location.href
+        }
+      });
+
+      const response = await docClient.send(command);
+      this.state.password = response.Item.password;
+    };
+
+    GetGeneral();
+    GetRoom();
+
+    console.log("password=", this.state.password);
+
+    if (this.state.firstConfirm && this.state.password && this.state.password !== "") {
+      this.state.firstConfirm = false;
+      const passwordInput = prompt("パスワードが設定されています　4桁の数字(半角)を入力してください");
+      if (isNaN(passwordInput)) {
+        alert("パスワードが間違っています");
+        location.href = "/";
+      } else if (!isNaN(passwordInput)) {
+        if (passwordInput !== this.state.password) {
+          alert("パスワードが間違っています");
+          location.href = "/";
+        } else {
+          console.log("正しいパスワードが入力されました");
+        }
+      }
+    }
+
+    const { hasAcceptedProfile, hasChangedNameOrPronounsOrProfile } = this.props.store.state.activity;
     const isLockedDownDemo = isLockedDownDemoRoom();
-    const promptForNameAndAvatarBeforeEntry = this.props.hubIsBound ? !hasAcceptedProfile : !hasChangedNameOrPronouns;
+    const promptForNameAndAvatarBeforeEntry = this.props.hubIsBound
+      ? !hasAcceptedProfile
+      : !hasChangedNameOrPronounsOrProfile;
 
     // TODO: What does onEnteringCanceled do?
     return (
@@ -1134,61 +1226,18 @@ class UIRoot extends Component {
     const moreMenu = [
       {
         id: "user",
-        label: !this.state.signedIn ? (
-          <FormattedMessage id="more-menu.not-signed-in" defaultMessage="You are not signed in" />
-        ) : (
-          <FormattedMessage
-            id="more-menu.you-signed-in-as"
-            defaultMessage="Signed in as: {email}"
-            values={{ email: maskEmail(this.props.store.state.credentials.email) }}
-          />
-        ),
         items: [
-          this.state.signedIn
-            ? {
-                id: "sign-out",
-                label: <FormattedMessage id="more-menu.sign-out" defaultMessage="Sign Out" />,
-                icon: LeaveIcon,
-                onClick: async () => {
-                  await this.props.authChannel.signOut(this.props.hubChannel);
-                  this.setState({ signedIn: false });
-                }
-              }
-            : {
-                id: "sign-in",
-                label: <FormattedMessage id="more-menu.sign-in" defaultMessage="Sign In" />,
-                icon: EnterIcon,
-                onClick: () => this.showContextualSignInDialog()
-              },
           canCreateRoom && {
             id: "create-room",
             label: <FormattedMessage id="more-menu.create-room" defaultMessage="Create Room" />,
             icon: AddIcon,
-            onClick: () =>
-              this.showNonHistoriedDialog(LeaveRoomModal, {
-                destinationUrl: "/",
-                reason: LeaveReason.createRoom
-              })
+            onClick: () => createAndRedirectToNewHub(null, null, true)
           },
           !isLockedDownDemo && {
             id: "user-profile",
             label: <FormattedMessage id="more-menu.profile" defaultMessage="Change Name & Avatar" />,
             icon: AvatarIcon,
             onClick: () => this.setSidebar("profile")
-          },
-          {
-            id: "favorite-rooms",
-            label: <FormattedMessage id="more-menu.favorite-rooms" defaultMessage="Favorite Rooms" />,
-            icon: FavoritesIcon,
-            onClick: () =>
-              this.props.performConditionalSignIn(
-                () => this.props.hubChannel.signedIn,
-                () => {
-                  showFullScreenIfAvailable();
-                  this.props.mediaSearchStore.sourceNavigateWithNoNav("favorites", "use");
-                },
-                SignInMessages.favoriteRooms
-              )
           },
           {
             id: "preferences",
@@ -1209,55 +1258,6 @@ class UIRoot extends Component {
         id: "room",
         label: <FormattedMessage id="more-menu.room" defaultMessage="Room" />,
         items: [
-          {
-            id: "room-info",
-            label: <FormattedMessage id="more-menu.room-info" defaultMessage="Room Info and Settings" />,
-            icon: HomeIcon,
-            onClick: () => this.setSidebar("room-info")
-          },
-          (this.props.breakpoint === "sm" || this.props.breakpoint === "md") &&
-            (this.props.hub.entry_mode !== "invite" || this.props.hubChannel.can("update_hub")) && {
-              id: "invite",
-              label: <FormattedMessage id="more-menu.invite" defaultMessage="Invite" />,
-              icon: InviteIcon,
-              onClick: () => this.props.scene.emit("action_invite")
-            },
-          this.isFavorited()
-            ? {
-                id: "unfavorite-room",
-                label: <FormattedMessage id="more-menu.unfavorite-room" defaultMessage="Unfavorite Room" />,
-                icon: StarIcon,
-                onClick: () => this.toggleFavorited()
-              }
-            : {
-                id: "favorite-room",
-                label: <FormattedMessage id="more-menu.favorite-room" defaultMessage="Favorite Room" />,
-                icon: StarOutlineIcon,
-                onClick: () => this.toggleFavorited()
-              },
-          isModerator &&
-            entered && {
-              id: "streamer-mode",
-              label: streaming ? (
-                <FormattedMessage id="more-menu.exit-streamer-mode" defaultMessage="Exit Streamer Mode" />
-              ) : (
-                <FormattedMessage id="more-menu.enter-streamer-mode" defaultMessage="Enter Streamer Mode" />
-              ),
-              icon: CameraIcon,
-              onClick: () => this.toggleStreamerMode()
-            },
-          (this.props.breakpoint === "sm" || this.props.breakpoint === "md") &&
-            entered && {
-              id: "leave-room",
-              label: <FormattedMessage id="more-menu.enter-leave-room" defaultMessage="Leave Room" />,
-              icon: LeaveIcon,
-              onClick: () => {
-                this.showNonHistoriedDialog(LeaveRoomModal, {
-                  destinationUrl: "/",
-                  reason: LeaveReason.leaveRoom
-                });
-              }
-            },
           canCloseRoom && {
             id: "close-room",
             label: <FormattedMessage id="more-menu.close-room" defaultMessage="Close Room" />,
@@ -1282,29 +1282,11 @@ class UIRoot extends Component {
         id: "support",
         label: <FormattedMessage id="more-menu.support" defaultMessage="Support" />,
         items: [
-          configs.feature("show_community_link") && {
-            id: "community",
-            label: <FormattedMessage id="more-menu.community" defaultMessage="Community" />,
-            icon: DiscordIcon,
-            href: configs.link("community", "https://discord.gg/dFJncWwHun")
-          },
-          configs.feature("show_issue_report_link") && {
-            id: "report-issue",
-            label: <FormattedMessage id="more-menu.report-issue" defaultMessage="Report Issue" />,
-            icon: WarningCircleIcon,
-            href: configs.link("issue_report", "https://hubs.mozilla.com/docs/help.html")
-          },
           entered && {
             id: "start-tour",
             label: <FormattedMessage id="more-menu.start-tour" defaultMessage="Start Tour" />,
             icon: SupportIcon,
             onClick: () => this.props.scene.systems.tips.resetTips()
-          },
-          configs.feature("show_docs_link") && {
-            id: "help",
-            label: <FormattedMessage id="more-menu.help" defaultMessage="Help" />,
-            icon: SupportIcon,
-            href: configs.link("docs", "https://hubs.mozilla.com/docs")
           },
           configs.feature("show_controls_link") && {
             id: "controls",
@@ -1312,23 +1294,11 @@ class UIRoot extends Component {
             icon: SupportIcon,
             href: configs.link("controls", "https://hubs.mozilla.com/docs/hubs-controls.html")
           },
-          configs.feature("show_whats_new_link") && {
-            id: "whats-new",
-            label: <FormattedMessage id="more-menu.whats-new" defaultMessage="What's New" />,
-            icon: SupportIcon,
-            href: "/whats-new"
-          },
           configs.feature("show_terms") && {
             id: "tos",
             label: <FormattedMessage id="more-menu.tos" defaultMessage="Terms of Service" />,
             icon: TextDocumentIcon,
             href: configs.link("terms_of_use", TERMS)
-          },
-          configs.feature("show_privacy") && {
-            id: "privacy",
-            label: <FormattedMessage id="more-menu.privacy" defaultMessage="Privacy Notice" />,
-            icon: ShieldIcon,
-            href: configs.link("privacy_notice", PRIVACY)
           }
         ].filter(item => item)
       }
@@ -1433,6 +1403,7 @@ class UIRoot extends Component {
                     {!entered && !streaming && !isMobile && streamerName && <SpectatingLabel name={streamerName} />}
                     {this.props.activeObject && (
                       <ObjectMenuContainer
+                        setSidebar={this.setSidebar}
                         hubChannel={this.props.hubChannel}
                         scene={this.props.scene}
                         onOpenProfile={() => this.setSidebar("profile")}
@@ -1441,6 +1412,7 @@ class UIRoot extends Component {
                             this.setSidebar(null);
                           }
                         }}
+                        selectedQuestion={this.props.selectedQuestion}
                       />
                     )}
                     {this.state.sidebarId !== "chat" && this.props.hub && (
@@ -1585,6 +1557,22 @@ class UIRoot extends Component {
                       {this.state.sidebarId === "ecs-debug" && (
                         <ECSDebugSidebarContainer onClose={() => this.setSidebar(null)} />
                       )}
+                      {this.state.sidebarId === "library" && (
+                        <LibrarySidebarContainer
+                          onClose={() => this.setSidebar(null)}
+                          scene={this.props.scene}
+                          setQuestion={this.props.setQuestion}
+                        />
+                      )}
+                      {this.state.sidebarId === "libraryTest" &&
+                        this.props.selectedQuestion !== 3 &&
+                        this.props.selectedQuestion !== 7 && (
+                          <LibraryTestSidebarContainer
+                            onClose={() => this.setSidebar(null)}
+                            scene={this.props.scene}
+                            questionNum={this.props.selectedQuestion}
+                          />
+                        )}
                     </>
                   ) : undefined
                 }
@@ -1645,10 +1633,17 @@ class UIRoot extends Component {
                       </>
                     )}
                     {!isLockedDownDemo && (
-                      <ChatToolbarButton
-                        onClick={() => this.toggleSidebar("chat", { chatPrefix: "", chatAutofocus: false })}
-                        selected={this.state.sidebarId === "chat"}
-                      />
+                      <>
+                        <ChatToolbarButton
+                          onClick={() => this.toggleSidebar("chat", { chatPrefix: "", chatAutofocus: false })}
+                          selected={this.state.sidebarId === "chat"}
+                        />
+                        <LibraryToolbarButton
+                          scene={this.props.scene}
+                          onClick={() => this.toggleSidebar("library", { chatPrefix: "", chatAutofocus: false })}
+                          selected={this.state.sidebarId === "library"}
+                        />
+                      </>
                     )}
                     {entered && isMobileVR && (
                       <ToolbarButton
@@ -1707,6 +1702,8 @@ function UIRootHooksWrapper(props) {
   const breakpoint = useCssBreakpoints();
   const { voice_chat: canVoiceChat } = usePermissions();
 
+  const [selectedQuestion, setQuestion] = useState();
+
   useEffect(() => {
     const el = document.getElementById("preload-overlay");
     if (el) {
@@ -1731,7 +1728,13 @@ function UIRootHooksWrapper(props) {
   return (
     <ChatContextProvider messageDispatch={props.messageDispatch}>
       <ObjectListProvider scene={props.scene}>
-        <UIRoot breakpoint={breakpoint} {...props} canVoiceChat={canVoiceChat} />
+        <UIRoot
+          breakpoint={breakpoint}
+          {...props}
+          canVoiceChat={canVoiceChat}
+          selectedQuestion={selectedQuestion}
+          setQuestion={setQuestion}
+        />
       </ObjectListProvider>
     </ChatContextProvider>
   );

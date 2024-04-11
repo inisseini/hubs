@@ -35,6 +35,7 @@ export function Page({
 }) {
   return (
     <>
+      {/* 
       {isHmc ? <Banner /> : null}
       <Header
         showCloud={showCloud}
@@ -51,18 +52,6 @@ export function Page({
         onSignOut={onSignOut}
         isHmc={isHmc}
       />
-      <main {...rest}>
-        <MobileNav
-          showDocsLink={showDocsLink}
-          showSourceLink={showSourceLink}
-          showCommunityLink={showCommunityLink}
-          isHmc={isHmc}
-          isAdmin={isAdmin}
-          docsUrl={docsUrl}
-          communityUrl={communityUrl}
-        />
-        {children}
-      </main>
       <Footer
         hidePoweredBy={hidePoweredBy}
         showWhatsNewLink={showWhatsNewLink}
@@ -75,7 +64,19 @@ export function Page({
         showDiscordBotLink={showDiscordBotLink}
         appName={appName}
         isHmc={isHmc}
-      />
+      />*/}
+      <main {...rest}>
+        <MobileNav
+          showDocsLink={showDocsLink}
+          showSourceLink={showSourceLink}
+          showCommunityLink={showCommunityLink}
+          isHmc={isHmc}
+          isAdmin={isAdmin}
+          docsUrl={docsUrl}
+          communityUrl={communityUrl}
+        />
+        {children}
+      </main>
     </>
   );
 }

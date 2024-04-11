@@ -20,6 +20,13 @@ import { List, ButtonListItem } from "../layout/List";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { PermissionNotification } from "./PermissionNotifications";
 
+import userDemoImg from "../../assets/images/OOKAWA9V9A6918_TP_V4.jpg";
+import configs from "../../utils/configs";
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import configs from "../../utils/configs";
+
 const toolTipDescription = defineMessage({
   id: "people-sidebar.muted-tooltip",
   defaultMessage: "User is {mutedState}"
@@ -124,6 +131,44 @@ export function PeopleSidebar({
     return intl.formatMessage(toolTipDescription, { mutedState: isMuted ? "muted" : "not muted" });
   }
 
+  const onSendFriendRequest = target => {
+    const confirm = window.confirm("フレンド申請をしてよろしいですか？");
+    if (confirm) {
+      const message = "systemMessage/from/" + me + "/to/" + target + "/sendFriendRequest";
+      document.getElementById("avatar-rig").messageDispatch.dispatch(message);
+
+      const DBClient = new DynamoDBClient({
+        region: "ap-northeast-1",
+        credentials: {
+          accessKeyId: configs.ACCESSKEYID,
+          secretAccessKey: configs.SECRETACCESSKEY
+        }
+      });
+
+      const docClient = DynamoDBDocumentClient.from(DBClient);
+
+      const handleSubmit = async event => {
+        const command = new UpdateCommand({
+          TableName: "user-table",
+          Key: {
+            userName: target
+          },
+          Expression: "SET #orders = list_append(#orders, :v_orderId)",
+          ExpressionAttributeNames: {
+            "#orders": "requested"
+          },
+          ExpressionAttributeValues: {
+            ":v_orderId": me
+          }
+        });
+
+        const response = await docClient.send(command);
+      };
+
+      handleSubmit();
+    }
+  };
+
   return (
     <Sidebar
       title={
@@ -151,41 +196,70 @@ export function PeopleSidebar({
             const VoiceIcon = getVoiceIconComponent(person.micPresence);
 
             return (
-              <ButtonListItem
-                className={styles.person}
-                key={person.id}
-                type="button"
-                onClick={e => onSelectPerson(person, e)}
-              >
-                {person.hand_raised && <HandRaisedIcon />}
-                {<DeviceIcon title={getDeviceLabel(person.context, intl)} />}
-                {!person.context.discord && VoiceIcon && <VoiceIcon title={getVoiceLabel(person.micPresence, intl)} />}
-                {!person.isMe && (
-                  <ToolTip
-                    classProp="tooltip"
-                    location="bottom"
-                    description={getToolTipDescription(
-                      store._preferences?.avatarVoiceLevels?.[person.profile.displayName]?.muted
-                    )}
-                  >
-                    {store._preferences?.avatarVoiceLevels?.[person.profile.displayName]?.muted ? (
-                      <UserSoundOffIcon />
-                    ) : (
-                      <UserSoundOnIcon />
-                    )}
-                  </ToolTip>
-                )}
-                <p>{getPersonName(person, intl)}</p>
-                {person.roles.owner && (
-                  <StarIcon
-                    title={intl.formatMessage({ id: "people-sidebar.moderator-label", defaultMessage: "Moderator" })}
-                    className={styles.moderatorIcon}
-                    width={12}
-                    height={12}
+              <div className={styles.person} key={person.id} type="button" onClick={e => onSelectPerson(person, e)}>
+                <div className={styles.icon}>
+                  <img
+                    src={
+                      "https://metacampusassets.s3.ap-northeast-1.amazonaws.com/" +
+                      getPersonName(person, intl).split(" ")[0] +
+                      ".jpg"
+                    }
+                    alt
+                    onError={e => (this.src = "")}
                   />
-                )}
-                <p className={styles.presence}>{getPresenceMessage(person.presence, intl)}</p>
-              </ButtonListItem>
+                </div>
+                <div className={styles.detail}>
+                  <p>{getPersonName(person, intl)}</p>
+                  <div className={styles.detailIcons}>
+                    {person.hand_raised && <HandRaisedIcon />}
+                    {<DeviceIcon title={getDeviceLabel(person.context, intl)} />}
+                    {!person.context.discord && VoiceIcon && (
+                      <VoiceIcon title={getVoiceLabel(person.micPresence, intl)} />
+                    )}
+                    {!person.isMe && (
+                      <ToolTip
+                        classProp="tooltip"
+                        location="bottom"
+                        description={getToolTipDescription(
+                          store._preferences?.avatarVoiceLevels?.[person.profile.displayName]?.muted
+                        )}
+                      >
+                        {store._preferences?.avatarVoiceLevels?.[person.profile.displayName]?.muted ? (
+                          <UserSoundOffIcon />
+                        ) : (
+                          <UserSoundOnIcon />
+                        )}
+                      </ToolTip>
+                    )}
+                    {person.roles.owner && (
+                      <StarIcon
+                        title={intl.formatMessage({
+                          id: "people-sidebar.moderator-label",
+                          defaultMessage: "Moderator"
+                        })}
+                        className={styles.moderatorIcon}
+                        width={12}
+                        height={12}
+                      />
+                    )}
+                    <p className={styles.presence}>{getPresenceMessage(person.presence, intl)}</p>
+                  </div>
+                </div>
+                <div className={styles.status}>
+                  {configs.isAdmin() ? <p className="position">運営</p> : undefined}
+                  {!person.isMe ? (
+                    <>
+                      {localStorage.getItem("friends")?.includes(getPersonName(person, intl)) ? (
+                        <p className="friend">フレンドです</p>
+                      ) : (
+                        <button className="friend" onClick={() => onSendFriendRequest(getPersonName(person, intl))}>
+                          フレンド申請
+                        </button>
+                      )}
+                    </>
+                  ) : undefined}
+                </div>
+              </div>
             );
           })}
       </List>

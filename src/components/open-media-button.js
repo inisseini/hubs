@@ -45,6 +45,11 @@ AFRAME.registerComponent("open-media-button", {
 
       const exitImmersive = async () => await handleExitTo2DInterstitial(false, () => {}, true);
 
+      if (this.src.indexOf("#library") !== -1) {
+        APP.scene.emit("action_toggle_library");
+        return;
+      }
+
       let hubId;
       if (this.data.onlyOpenLink) {
         await exitImmersive();

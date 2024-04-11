@@ -4,6 +4,7 @@ import { PromoteClientModal } from "./PromoteClientModal";
 import { getAvatarThumbnailUrl } from "../../utils/avatar-utils";
 import { UserProfileSidebar } from "./UserProfileSidebar.js";
 import { SignInMessages } from "../auth/SignInModal";
+import { findAncestorWithComponent } from "../../utils/scene-graph";
 
 export function UserProfileSidebarContainer({
   user,
@@ -19,7 +20,7 @@ export function UserProfileSidebarContainer({
 
   const {
     id: userId,
-    profile: { displayName, identityName, avatarId, pronouns },
+    profile: { displayName, identityName, avatarId, pronouns, profile, friendContent, sendDiscordMessage },
     roles
   } = user;
   const mayKick = hubChannel.canOrWillIfCreator("kick_users");
@@ -99,11 +100,21 @@ export function UserProfileSidebarContainer({
     }
   }, [performConditionalSignIn, hubChannel, userId, onClose, onBack]);
 
+  const me = window.APP.hubChannel.store.state.profile.displayName;
+
+  const sendFriendRequest = () => {
+    const message = "systemMessage/from/" + me + "/to/" + displayName + "/sendFriendRequest";
+    document.getElementById("avatar-rig").messageDispatch.dispatch(message);
+  };
+
   return (
     <UserProfileSidebar
       userId={user.id}
       displayName={displayName}
       pronouns={pronouns}
+      profile={profile}
+      friendContent={friendContent}
+      sendDiscordMessage={sendDiscordMessage}
       identityName={identityName}
       avatarPreview={<img src={avatarThumbnailUrl} />}
       isSignedIn={isSignedIn}
@@ -118,6 +129,7 @@ export function UserProfileSidebarContainer({
       onMute={mute}
       canKick={mayKick}
       onKick={kick}
+      onSendFriendRequest={sendFriendRequest}
       showBackButton={showBackButton}
       onClose={onClose}
       onBack={onBack}

@@ -7,6 +7,7 @@ import { UserProfileSidebarContainer } from "./UserProfileSidebarContainer";
 import { useCan } from "./hooks/useCan";
 import { useRoomPermissions } from "./hooks/useRoomPermissions";
 import { useRole } from "./hooks/useRole";
+import DiscordMessageSend from "../../utils/Discord-message-send";
 
 export function userFromPresence(sessionId, presence, micPresences, mySessionId, voiceEnabled) {
   const meta = presence.metas[presence.metas.length - 1];

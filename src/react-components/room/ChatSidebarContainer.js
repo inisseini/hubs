@@ -226,6 +226,10 @@ export function ChatSidebarContainer({
           </>
         }
       />
+      <label style={{ display: "flex", justifyContent: "flex-end", gap: "0px 5px", padding: "5px 15px 15px 15px" }}>
+        <input type="checkbox" />
+        <p style={{ marginTop: "auto" }}>Discordにも送信する</p>
+      </label>
     </ChatSidebar>
   );
 }

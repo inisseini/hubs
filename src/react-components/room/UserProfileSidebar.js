@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import PropTypes from "prop-types";
 import { Sidebar } from "../sidebar/Sidebar";
 import { CloseButton } from "../input/CloseButton";
@@ -13,6 +13,19 @@ import { ReactComponent as VolumeHigh } from "../icons/VolumeHigh.svg";
 import { ReactComponent as VolumeMuted } from "../icons/VolumeMuted.svg";
 import useAvatarVolume from "./hooks/useAvatarVolume";
 import { calcLevel, calcGainMultiplier, MAX_VOLUME_LABELS } from "../../utils/avatar-volume-utils";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import configs from "../../utils/configs";
+
+const DBClient = new DynamoDBClient({
+  region: "ap-northeast-1",
+  credentials: {
+    accessKeyId: configs.ACCESSKEYID,
+    secretAccessKey: configs.SECRETACCESSKEY
+  }
+});
+
+const docClient = DynamoDBDocumentClient.from(DBClient);
 
 const MIN = 0;
 const MAX = MAX_VOLUME_LABELS - 1;
@@ -22,6 +35,9 @@ export function UserProfileSidebar({
   userId,
   displayName,
   pronouns,
+  profile,
+  friendContent,
+  sendDiscordMessage,
   identityName,
   avatarPreview,
   hasMicPresence,
@@ -37,6 +53,7 @@ export function UserProfileSidebar({
   onMute,
   canKick,
   onKick,
+  onSendFriendRequest,
   showBackButton,
   onBack,
   onClose,
@@ -52,6 +69,35 @@ export function UserProfileSidebar({
   );
   const newLevel = calcLevel(multiplier);
 
+  const [canShow, setShow] = useState(false);
+
+  const checkRelationship = () => {
+    /*const Get = async () => {
+      const command = new GetCommand({
+        TableName: 'accounts',
+        Key: {
+          key: 'settings',
+        },
+      });
+  
+      const response = await docClient.send(command);
+      setValues({
+        openingTime: response.Item.openingTime,
+        closingTime: response.Item.closingTime,
+      });
+    };
+    
+    Get();*/
+
+    const me = window.APP.hubChannel.store.state.profile.displayName;
+    if (me === displayName) return;
+    const friendList = localStorage.getItem("friends");
+    const result = friendList.includes(displayName);
+    if (result) {
+      setShow(true);
+    }
+  };
+
   return (
     <Sidebar
       beforeTitle={showBackButton ? <BackButton onClick={onBack} /> : <CloseButton onClick={onClose} />}
@@ -61,6 +107,10 @@ export function UserProfileSidebar({
       <Column center padding>
         <h2 className={styles.displayName}>{identityName ? `${displayName} (${identityName})` : displayName}</h2>
         {pronouns && <span className={styles.pronouns}>{pronouns}</span>}
+        {profile && <span className={styles.profile}>{profile}</span>}
+        {!canShow && <button onClick={checkRelationship}>フレンド限定内容を見る</button>}
+        {canShow && friendContent && <span className={styles.profile}>{friendContent}</span>}
+        {sendDiscordMessage && <span className={styles.profile}>{sendDiscordMessage}</span>}
         <div className={styles.avatarPreviewContainer}>{avatarPreview || <div />}</div>
         {hasMicPresence && (
           <div className={styles.sliderContainer}>
@@ -142,6 +192,9 @@ export function UserProfileSidebar({
             <FormattedMessage id="user-profile-sidebar.kick-button" defaultMessage="Kick" />
           </Button>
         )}
+        <Button preset="cancel" onClick={onSendFriendRequest}>
+          <FormattedMessage id="user-profile-sidebar.friend-button" defaultMessage="Send Friend Request" />
+        </Button>
       </Column>
     </Sidebar>
   );
@@ -152,6 +205,9 @@ UserProfileSidebar.propTypes = {
   userId: PropTypes.string,
   displayName: PropTypes.string,
   pronouns: PropTypes.string,
+  profile: PropTypes.string,
+  friendContent: PropTypes.string,
+  sendDiscordMessage: PropTypes.string,
   identityName: PropTypes.string,
   avatarPreview: PropTypes.node,
   hasMicPresence: PropTypes.bool,
@@ -167,6 +223,7 @@ UserProfileSidebar.propTypes = {
   onMute: PropTypes.func,
   canKick: PropTypes.bool,
   onKick: PropTypes.func,
+  onSendFriendRequest: PropTypes.func,
   showBackButton: PropTypes.bool,
   onBack: PropTypes.func,
   onClose: PropTypes.func

@@ -66,6 +66,9 @@ export const SCHEMA = {
         displayName: { type: "string", pattern: "^[A-Za-z0-9_~\\s\\-]{3,32}$" },
         avatarId: { type: "string" },
         pronouns: { type: "string", pattern: "^([a-zA-Z]{1,32}\\/){0,4}[a-zA-Z]{1,32}$" },
+        profile: { type: "string", pattern: "([^\x01-\x7E]|w){0,300}$" },
+        friendContent: { type: "string" },
+        sendDiscordMessage: { type: "string" },
         // personalAvatarId is obsolete, but we need it here for backwards compatibility.
         personalAvatarId: { type: "string" }
       }
@@ -85,7 +88,7 @@ export const SCHEMA = {
       additionalProperties: false,
       properties: {
         hasFoundFreeze: { type: "boolean" },
-        hasChangedNameOrPronouns: { type: "boolean" },
+        hasChangedNameOrPronounsOrProfile: { type: "boolean" },
         hasAcceptedProfile: { type: "boolean" },
         lastEnteredAt: { type: "string" },
         hasPinned: { type: "boolean" },
@@ -320,7 +323,7 @@ export default class Store extends EventTarget {
     }
 
     // Regenerate name to encourage users to change it.
-    if (!this.state.activity.hasChangedNameOrPronouns) {
+    if (!this.state.activity.hasChangedNameOrPronounsOrProfile) {
       this.update({ profile: { displayName: generateRandomName() } });
     }
   };

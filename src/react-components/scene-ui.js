@@ -32,7 +32,7 @@ class SceneUI extends Component {
     super(props);
   }
 
-  createRoom = () => {
+  createRoom = e => {
     createAndRedirectToNewHub(undefined, this.props.sceneId);
   };
 

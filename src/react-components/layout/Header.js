@@ -35,13 +35,6 @@ export function Header({
                 <AppLogo />
               </a>
             </li>
-            {enableSpoke && (
-              <li>
-                <a href="/spoke">
-                  {isHmc ? <FormattedMessage id="header.spoke" defaultMessage="Spoke" /> : editorName}
-                </a>
-              </li>
-            )}
             {showDocsLink && (
               <li>
                 <a href={docsUrl}>

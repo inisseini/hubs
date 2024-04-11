@@ -28,6 +28,7 @@ import { anyEntityWith, shouldUseNewLoader } from "./utils/bit-utils";
 import { moveToSpawnPoint } from "./bit-systems/waypoint";
 import { spawnFromFileList, spawnFromUrl } from "./load-media-on-paste-or-drop";
 import { isLockedDownDemoRoom } from "./utils/hub-utils";
+import DiscordMessageSend from "./utils/Discord-message-send";
 
 export default class SceneEntryManager {
   constructor(hubChannel, authChannel, history) {
@@ -60,6 +61,10 @@ export default class SceneEntryManager {
 
   enterScene = async (enterInVR, muteOnEntry) => {
     console.log("Entering scene...");
+
+    const me = window.APP.hubChannel.store.state.profile.displayName;
+    DiscordMessageSend("text", me + "が入室しました！！");
+
     document.getElementById("viewing-camera").removeAttribute("scene-preview-camera");
 
     if (isDebug && NAF.connection.adapter.session) {

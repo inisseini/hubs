@@ -6,12 +6,17 @@ import { SOUND_CHAT_MESSAGE, SOUND_QUACK, SOUND_SPECIAL_QUACK } from "./systems/
 import ducky from "./assets/models/DuckyMesh.glb";
 import { EventTarget } from "event-target-shim";
 import { ExitReason } from "./react-components/room/ExitedRoomScreen";
-import { LogMessageType } from "./react-components/room/ChatSidebar";
+import { LogMessageType, SystemMessage } from "./react-components/room/ChatSidebar";
 import { createNetworkedEntity } from "./utils/create-networked-entity";
 import { add, testAsset, respawn } from "./utils/chat-commands";
 import { isLockedDownDemoRoom } from "./utils/hub-utils";
 import { loadState, clearState } from "./utils/entity-state-utils";
 import { shouldUseNewLoader } from "./utils/bit-utils";
+import DiscordMessageSend from "./utils/Discord-message-send";
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import configs from "./utils/configs";
 
 let uiRoot;
 // Handles user-entered messages
@@ -40,6 +45,7 @@ export default class MessageDispatch extends EventTarget {
     }
 
     this.presenceLogEntries.push(entry);
+
     this.remountUI({ presenceLogEntries: this.presenceLogEntries });
     if (entry.type === "chat" && this.scene.is("loaded")) {
       this.scene.systems["hubs-systems"].soundEffectsSystem.playSoundOneShot(SOUND_CHAT_MESSAGE);
@@ -60,8 +66,98 @@ export default class MessageDispatch extends EventTarget {
   receive(message) {
     if (isLockedDownDemoRoom()) return;
 
-    this.addToPresenceLog(message);
-    this.dispatchEvent(new CustomEvent("message", { detail: message }));
+    const isSlash = message.body !== undefined ? message.body.includes("/") : false;
+    if (isSlash) {
+      const chatBodyList = message.body.split("/");
+      if (
+        chatBodyList[0] === "systemMessage" &&
+        window.APP.hubChannel.store.state.profile.displayName === chatBodyList[4]
+      ) {
+        console.log("test", window.APP.hubChannel.store);
+        const request = chatBodyList[2] + "さんがあなたにフレンド申請をしています";
+        /*
+        const requestMessage = { type: "chat", body: request, maySpawn: true, type: "chat" };
+        this.addToPresenceLog(requestMessage);
+        this.dispatchEvent(new CustomEvent("message", { detail: requestMessage }));
+        */
+        //const friendConfirm = confirm(request);
+        const friendConfirm = window.confirm(request);
+        if (friendConfirm) {
+          const me = window.APP.hubChannel.store.state.profile.displayName;
+
+          //const message = "systemMessage/from/" + me + "/to/" + chatBodyList[2] + "/sendFriendRequest";
+          //document.getElementById("avatar-rig").messageDispatch.dispatch(message);
+
+          const DBClient = new DynamoDBClient({
+            region: "ap-northeast-1",
+            credentials: {
+              accessKeyId: configs.ACCESSKEYID,
+              secretAccessKey: configs.SECRETACCESSKEY
+            }
+          });
+
+          const docClient = DynamoDBDocumentClient.from(DBClient);
+
+          //フレンド申請返し
+          const reRequest = async event => {
+            const command = new UpdateCommand({
+              TableName: "user-table",
+              Key: {
+                userName: chatBodyList[2]
+              },
+              Expression: "SET #orders = list_append(#orders, :v_orderId)",
+              ExpressionAttributeNames: {
+                "#orders": "requested"
+              },
+              ExpressionAttributeValues: {
+                ":v_orderId": me
+              }
+            });
+
+            const response = await docClient.send(command);
+          };
+
+          reRequest();
+
+          const joinFriends = async event => {
+            const command = new UpdateCommand({
+              TableName: "user-table",
+              Key: {
+                userName: me
+              },
+              Expression: "SET #orders = list_append(#orders, :v_orderId)",
+              ExpressionAttributeNames: {
+                "#orders": "friends"
+              },
+              ExpressionAttributeValues: {
+                ":v_orderId": chatBodyList[2]
+              }
+            });
+
+            const response = await docClient.send(command);
+          };
+
+          joinFriends();
+        }
+      } else if (
+        chatBodyList[0] === "systemMessage" &&
+        window.APP.hubChannel.store.state.profile.displayName !== chatBodyList[4]
+      ) {
+        return;
+      } else if (chatBodyList[0] === "Discord") {
+        console.log(message);
+        const messageContent = { type: "chat", body: message.body.slice(8), maySpawn: true, type: "chat" };
+        DiscordMessageSend("text", messageContent.body);
+        this.addToPresenceLog(messageContent);
+        this.dispatchEvent(new CustomEvent("message", { detail: messageContent }));
+      } else {
+        this.addToPresenceLog(message);
+        this.dispatchEvent(new CustomEvent("message", { detail: message }));
+      }
+    } else {
+      this.addToPresenceLog(message);
+      this.dispatchEvent(new CustomEvent("message", { detail: message }));
+    }
   }
 
   log = (messageType, props) => {

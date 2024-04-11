@@ -25,6 +25,17 @@ function HomeRoot() {
   );
 }
 
+function NonBusinessHoursRoot() {
+  return <p>運用時間外です。</p>;
+}
+
 const container = document.getElementById("home-root");
 const root = createRoot(container);
-root.render(<HomeRoot />);
+
+const hour = new Date().getHours();
+if (hour >= 8 && hour < 24) {
+  root.render(<HomeRoot />);
+} else if (0 < hour < 8) {
+  //root.render(<NonBusinessHoursRoot />);
+  root.render(<HomeRoot />);
+}

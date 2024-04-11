@@ -1,4 +1,4 @@
-import appLogo from "../assets/images/app-logo.png";
+import appLogo from "../assets/images/gtie_rgb_bk02.png";
 import appLogoDark from "../assets/images/app-logo-dark.png";
 import companyLogo from "../assets/images/company-logo.png";
 import homeHeroBackground from "../assets/images/home-hero-background-unbranded.png";

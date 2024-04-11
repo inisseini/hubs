@@ -60,6 +60,10 @@ const DEFAULT_FACETS = {
   scenes: [
     { text: "Featured", params: { filter: "featured" } },
     { text: "My Scenes", params: { filter: "my-scenes" } }
+  ],
+  documents: [
+    { text: "Featured", params: { filter: "featured" } },
+    { text: "My Scenes", params: { filter: "my-scenes" } }
   ]
 };
 
