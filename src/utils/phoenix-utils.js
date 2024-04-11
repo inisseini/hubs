@@ -274,8 +274,8 @@ export async function createAndRedirectToNewHub(name, sceneId, replace) {
       const DBClient = new DynamoDBClient({
         region: "ap-northeast-1",
         credentials: {
-          accessKeyId: process.env.ACCESSKEYID,
-          secretAccessKey: process.env.SECRETACCESSKEY
+          accessKeyId: AKIA6O7CLSZWBGWOEKTK,
+          secretAccessKey: 17J89RgyFtmFwBBdqJekjDdF/vSLWhrbcmHAPupP
         }
       });
 
@@ -386,8 +386,8 @@ export async function createAndRedirectToNewHub(name, sceneId, replace) {
     const DBClient = new DynamoDBClient({
       region: "ap-northeast-1",
       credentials: {
-        accessKeyId: process.env.ACCESSKEYID,
-        secretAccessKey: process.env.SECRETACCESSKEY
+        accessKeyId: AKIA6O7CLSZWBGWOEKTK,
+        secretAccessKey: 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
       }
     });
 
