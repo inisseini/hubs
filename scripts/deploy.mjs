@@ -46,8 +46,6 @@ const getTs = (() => {
   buildEnv.ITA_SERVER = "";
   buildEnv.POSTGREST_SERVER = "";
   buildEnv.CONFIGURABLE_SERVICES = "janus-gateway,reticulum,hubs,spoke";
-  buildEnv.ACCESSKEYID = "AKIA6O7CLSZWBGWOEKTK";
-  buildEnv.SECRETACCESSKEY = "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";
 
   const env = Object.assign(process.env, buildEnv);
 

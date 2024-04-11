@@ -192,6 +192,9 @@ async function fetchAppConfigAndEnvironmentVars() {
   process.env.THUMBNAIL_SERVER = thumbnail_server;
   process.env.NON_CORS_PROXY_DOMAINS = `${localIp},hubs.local,localhost`;
 
+  process.env.ACCESSKEYID = "AKIA6O7CLSZWBGWOEKTK";
+  process.env.SECRETACCESSKEY = "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";
+
   return appConfig;
 }
 
