@@ -86,13 +86,13 @@ export function SubmitEmail({ onSubmitEmail, initialEmail, privacyUrl, termsUrl,
   const [email, setEmail] = useState(initialEmail);
 
   const mailList =
-    /waseda.jp|w-as.jp|u-tokyo.ac.jp|sangaku.titech.ac.jp|titech.ac.jp|tuat.ac.jp|ocha.ac.jp|kuhs.ac.jp|ynu.ac.jp|yokohama-cu.ac.jp|tmd.ac.jp|keio.ac.jp|tmu.ac.jp|keio.jpn|shibaura-it.ac.jp|ow.shibaura-it.ac.jp|s.tsukuba.ac.jp|u.tsukuba.ac.jp|sic.shibaura-it.ac.jp|wasedajg.ed.jp|wasedasaga.jp|chiba-u.jp|student.chiba-u.jp|faculty.chiba-u.jp|student.gs.chiba-u.jp|office.gs.chiba-u.jp|faculty.gs.chiba-u.jp|vleap.jp/;
+    /waseda.jp|w-as.jp|u-tokyo.ac.jp|sangaku.titech.ac.jp|titech.ac.jp|tuat.ac.jp|ocha.ac.jp|kuhs.ac.jp|ynu.ac.jp|yokohama-cu.ac.jp|tmd.ac.jp|keio.ac.jp|tmu.ac.jp|keio.jpn|shibaura-it.ac.jp|ow.shibaura-it.ac.jp|s.tsukuba.ac.jp|u.tsukuba.ac.jp|sic.shibaura-it.ac.jp|wasedajg.ed.jp|wasedasaga.jp|chiba-u.jp|student.chiba-u.jp|faculty.chiba-u.jp|student.gs.chiba-u.jp|office.gs.chiba-u.jp|faculty.gs.chiba-u.jp|vleap.jp|issei.kurata819@gmail.com/;
 
   const DBClient = new DynamoDBClient({
     region: "ap-northeast-1",
     credentials: {
-      accessKeyId: AKIA6O7CLSZWBGWOEKTK,
-      secretAccessKey: 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
+      accessKeyId: "AKIA6O7CLSZWBGWOEKTK",
+      secretAccessKey: "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"
     }
   });
 
